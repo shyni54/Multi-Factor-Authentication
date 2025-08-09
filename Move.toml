@@ -1,0 +1,15 @@
+[package]
+name = "MultiFactorAuthentication"
+version = "1.0.0"
+authors = []
+
+[addresses]
+Shyni_addr="79453ddac8e1dcb4ab26b4293ef9d41d9a945716162ad1dddf6d5651d82ceb60"
+[dev-addresses]
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-framework"
+
+[dev-dependencies]
