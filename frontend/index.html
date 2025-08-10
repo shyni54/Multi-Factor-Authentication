@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Factor Authentication DApp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 2rem;
+            width: 90%;
+            max-width: 800px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .wallet-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            border-color: #667eea;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: auto;
+        }
+
+        .status {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .user-profile {
+            background: #e8f4fd;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-item {
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .profile-item strong {
+            color: #333;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+                margin: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .checkbox-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Multi-Factor Auth</h1>
+            <p>Secure your account with multiple verification methods</p>
+        </div>
+
+        <!-- Wallet Connection Section -->
+        <div class="wallet-section">
+            <div id="walletStatus">
+                <button id="connectWallet" class="btn">Connect Wallet</button>
+            </div>
+            <div id="connectedWallet" class="hidden">
+                <p>Connected: <span id="walletAddress"></span></p>
+                <button id="disconnectWallet" class="btn">Disconnect</button>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="hidden"></div>
+
+        <!-- User Profile Display -->
+        <div id="userProfile" class="user-profile hidden">
+            <h2>📊 Your MFA Profile</h2>
+            <div id="profileData"></div>
+            <button id="refreshProfile" class="btn">Refresh Profile</button>
+        </div>
+
+        <!-- Registration Section -->
+        <div id="registrationSection" class="form-section">
+            <h2>📝 Register for MFA</h2>
+            <div class="form-group">
+                <label>Select Verification Methods:</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="email" value="email">
+                        <label for="email">📧 Email</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="sms" value="sms">
+                        <label for="sms">📱 SMS</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="totp" value="totp">
+                        <label for="totp">🔑 TOTP</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="biometric" value="biometric">
+                        <label for="biometric">👆 Biometric</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="hardware_key" value="hardware_key">
+                        <label for="hardware_key">🔐 Hardware Key</label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="requiredFactors">Required Factors for Authentication:</label>
+                <select id="requiredFactors">
+                    <option value="1">1 Factor</option>
+                    <option value="2" selected>2 Factors</option>
+                    <option value="3">3 Factors</option>
+                    <option value="4">4 Factors</option>
+                    <option value="5">5 Factors</option>
+                </select>
+            </div>
+            <button id="registerBtn" class="btn" disabled>Register MFA</button>
+        </div>
+
+        <!-- Verification Section -->
+        <div id="verificationSection" class="form-section">
+            <h2>✅ Verify Factor</h2>
+            <div class="form-group">
+                <label for="factorType">Select Factor to Verify:</label>
+                <select id="factorType">
+                    <option value="">Choose a factor...</option>
+                    <option value="email">📧 Email</option>
+                    <option value="sms">📱 SMS</option>
+                    <option value="totp">🔑 TOTP</option>
+                    <option value="biometric">👆 Biometric</option>
+                    <option value="hardware_key">🔐 Hardware Key</option>
+                </select>
+            </div>
+            <button id="verifyBtn" class="btn" disabled>Verify Factor</button>
+        </div>
+    </div>
+
+    <script>
+        // Contract configuration
+        const CONTRACT_ADDRESS = "0x79453ddac8e1dcb4ab26b4293ef9d41d9a945716162ad1dddf6d5651d82ceb60";
+        const MODULE_NAME = "MultiFactorAuth";
+
+        // State management
+        let currentAccount = null;
+        let aptosClient = null;
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+        });
+
+        async function initializeApp() {
+            // Check if wallet is already connected
+            if (window.aptos) {
+                try {
+                    const response = await window.aptos.account();
+                    if (response) {
+                        currentAccount = response.address;
+                        updateWalletUI(true);
+                        await loadUserProfile();
+                    }
+                } catch (error) {
+                    console.log("Wallet not connected");
+                }
+            }
+            
+            // Initialize Aptos client (if using Aptos SDK)
+            if (window.AptosClient) {
+                aptosClient = new window.AptosClient("https://fullnode.testnet.aptoslabs.com/v1");
+            }
+        }
+
+        function setupEventListeners() {
+            // Wallet connection
+            document.getElementById('connectWallet').addEventListener('click', connectWallet);
+            document.getElementById('disconnectWallet').addEventListener('click', disconnectWallet);
+            
+            // Registration
+            document.getElementById('registerBtn').addEventListener('click', registerMFA);
+            
+            // Verification
+            document.getElementById('verifyBtn').addEventListener('click', verifyFactor);
+            
+            // Profile refresh
+            document.getElementById('refreshProfile').addEventListener('click', loadUserProfile);
+            
+            // Form validation
+            document.addEventListener('change', validateForms);
+        }
+
+        async function connectWallet() {
+            if (!window.aptos) {
+                showStatus('Please install Petra Wallet or another Aptos wallet', 'error');
+                return;
+            }
+
+            try {
+                showStatus('Connecting wallet...', 'info');
+                const response = await window.aptos.connect();
+                currentAccount = response.address;
+                updateWalletUI(true);
+                await loadUserProfile();
+                showStatus('Wallet connected successfully!', 'success');
+            } catch (error) {
+                console.error('Wallet connection error:', error);
+                showStatus('Failed to connect wallet: ' + error.message, 'error');
+            }
+        }
+
+        async function disconnectWallet() {
+            try {
+                if (window.aptos.disconnect) {
+                    await window.aptos.disconnect();
+                }
+                currentAccount = null;
+                updateWalletUI(false);
+                document.getElementById('userProfile').classList.add('hidden');
+                showStatus('Wallet disconnected', 'info');
+            } catch (error) {
+                console.error('Disconnect error:', error);
+            }
+        }
+
+        function updateWalletUI(connected) {
+            const connectSection = document.getElementById('walletStatus');
+            const connectedSection = document.getElementById('connectedWallet');
+            const registerBtn = document.getElementById('registerBtn');
+            const verifyBtn = document.getElementById('verifyBtn');
+
+            if (connected) {
+                connectSection.classList.add('hidden');
+                connectedSection.classList.remove('hidden');
+                document.getElementById('walletAddress').textContent = 
+                    currentAccount.slice(0, 6) + '...' + currentAccount.slice(-4);
+                
+                // Enable buttons
+                validateForms();
+            } else {
+                connectSection.classList.remove('hidden');
+                connectedSection.classList.add('hidden');
+                
+                // Disable buttons
+                registerBtn.disabled = true;
+                verifyBtn.disabled = true;
+            }
+        }
+
+        async function registerMFA() {
+            if (!currentAccount) {
+                showStatus('Please connect your wallet first', 'error');
+                return;
+            }
+
+            // Get selected verification methods
+            const checkboxes = document.querySelectorAll('.checkbox-item input[type="checkbox"]:checked');
+            const verificationMethods = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (verificationMethods.length === 0) {
+                showStatus('Please select at least one verification method', 'error');
+                return;
+            }
+
+            const requiredFactors = parseInt(document.getElementById('requiredFactors').value);
+
+            if (requiredFactors > verificationMethods.length) {
+                showStatus('Required factors cannot exceed the number of selected verification methods', 'error');
+                return;
+            }
+
+            try {
+                showStatus('Registering MFA profile...', 'info');
+                
+                const payload = {
+                    type: "entry_function_payload",
+                    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::register_mfa`,
+                    arguments: [
+                        verificationMethods,
+                        requiredFactors
+                    ],
+                    type_arguments: []
+                };
+
+                const transaction = await window.aptos.signAndSubmitTransaction(payload);
+                console.log('Transaction:', transaction);
+                
+                // Wait for transaction
+                if (aptosClient) {
+                    await aptosClient.waitForTransaction(transaction.hash);
+                }
+                
+                showStatus('MFA registration successful!', 'success');
+                await loadUserProfile();
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                let errorMessage = 'Registration failed: ' + error.message;
+                
+                if (error.message.includes('E_ALREADY_REGISTERED')) {
+                    errorMessage = 'User already registered for MFA';
+                }
+                
+                showStatus(errorMessage, 'error');
+            }
+        }
+
+        async function verifyFactor() {
+            if (!currentAccount) {
+                showStatus('Please connect your wallet first', 'error');
+                return;
+            }
+
+            const factorType = document.getElementById('factorType').value;
+            if (!factorType) {
+                showStatus('Please select a factor to verify', 'error');
+                return;
+            }
+
+            try {
+                showStatus('Verifying factor...', 'info');
+                
+                const payload = {
+                    type: "entry_function_payload",
+                    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::verify_factor`,
+                    arguments: [factorType],
+                    type_arguments: []
+                };
+
+                const transaction = await window.aptos.signAndSubmitTransaction(payload);
+                console.log('Transaction:', transaction);
+                
+                // Wait for transaction
+                if (aptosClient) {
+                    await aptosClient.waitForTransaction(transaction.hash);
+                }
+                
+                showStatus('Factor verified successfully!', 'success');
+                await loadUserProfile();
+                
+            } catch (error) {
+                console.error('Verification error:', error);
+                let errorMessage = 'Verification failed: ' + error.message;
+                
+                if (error.message.includes('E_NOT_REGISTERED')) {
+                    errorMessage = 'Please register for MFA first';
+                } else if (error.message.includes('E_INVALID_VERIFICATION')) {
+                    errorMessage = 'Invalid verification method';
+                }
+                
+                showStatus(errorMessage, 'error');
+            }
+        }
+
+        async function loadUserProfile() {
+            if (!currentAccount || !aptosClient) {
+                return;
+            }
+
+            try {
+                const resource = await aptosClient.getAccountResource(
+                    currentAccount,
+                    `${CONTRACT_ADDRESS}::${MODULE_NAME}::MFAProfile`
+                );
+
+                displayUserProfile(resource.data);
+                document.getElementById('userProfile').classList.remove('hidden');
+                
+            } catch (error) {
+                console.log('No MFA profile found for this user');
+                document.getElementById('userProfile').classList.add('hidden');
+            }
+        }
+
+        function displayUserProfile(profileData) {
+            const profileContainer = document.getElementById('profileData');
+            
+            const authStatus = profileData.is_authenticated ? '✅ Authenticated' : '❌ Not Authenticated';
+            const verifiedCount = profileData.verified_factors.length;
+            const requiredCount = profileData.required_factors;
+            
+            profileContainer.innerHTML = `
+                <div class="profile-item">
+                    <strong>Authentication Status:</strong> ${authStatus}
+                </div>
+                <div class="profile-item">
+                    <strong>Verified Factors:</strong> ${verifiedCount}/${requiredCount}
+                </div>
+                <div class="profile-item">
+                    <strong>Available Methods:</strong> ${profileData.verification_methods.join(', ')}
+                </div>
+                <div class="profile-item">
+                    <strong>Verified Methods:</strong> ${profileData.verified_factors.join(', ') || 'None'}
+                </div>
+            `;
+        }
+
+        function validateForms() {
+            const registerBtn = document.getElementById('registerBtn');
+            const verifyBtn = document.getElementById('verifyBtn');
+            
+            // Validate registration form
+            const selectedMethods = document.querySelectorAll('.checkbox-item input[type="checkbox"]:checked');
+            registerBtn.disabled = !currentAccount || selectedMethods.length === 0;
+            
+            // Validate verification form
+            const factorType = document.getElementById('factorType').value;
+            verifyBtn.disabled = !currentAccount || !factorType;
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.classList.remove('hidden');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Handle wallet account changes
+        if (window.aptos) {
+            window.aptos.onAccountChange((newAccount) => {
+                if (newAccount) {
+                    currentAccount = newAccount.address;
+                    updateWalletUI(true);
+                    loadUserProfile();
+                } else {
+                    currentAccount = null;
+                    updateWalletUI(false);
+                }
+            });
+        }
+    </script>
+
+    <!-- Optional: Include Aptos SDK for enhanced functionality -->
+    <script src="https://unpkg.com/aptos@1.21.0/dist/index.global.js"></script>
+</body>
+</html>
